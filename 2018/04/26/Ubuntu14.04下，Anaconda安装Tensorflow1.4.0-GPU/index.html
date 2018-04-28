@@ -1,0 +1,113 @@
+<!DOCTYPE html><html><head><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content="专注于机器学习、深度学习、图形图像处理。"><title>Ubuntu14.04下，Anaconda安装Tensorflow1.4.0-GPU | 噢噢噢噢奥利</title><link rel="stylesheet" type="text/css" href="/css/style.css?v=0.0.0"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/normalize/8.0.0/normalize.min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/pure/1.0.0/pure-min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/pure/1.0.0/grids-responsive-min.css"><link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css"><script type="text/javascript" src="//cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">Ubuntu14.04下，Anaconda安装Tensorflow1.4.0-GPU</h1><a id="logo" href="/.">噢噢噢噢奥利</a><p class="description"></p></div><div id="nav-menu"><a class="current" href="/."><i class="fa fa-home"> Start</i></a><a href="/archives/"><i class="fa fa-archive"> Archiv</i></a><a href="/about/"><i class="fa fa-user"> Über</i></a></div></div><div class="pure-g" id="layout"><div class="pure-u-1 pure-u-md-3-4"><div class="content_container"><div class="post"><h1 class="post-title">Ubuntu14.04下，Anaconda安装Tensorflow1.4.0-GPU</h1><div class="post-content"><p>&emsp;&emsp;在Ubuntu14.04下，安装TensorFlow-GPU的方法。</p>
+<a id="more"></a>
+<p>具体版本号：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">环境</th>
+<th style="text-align:center">版本</th>
+<th style="text-align:center">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">Ubuntu</td>
+<td style="text-align:center">14.04</td>
+<td style="text-align:center">自带的编译器版本是 gcc4.8.4</td>
+</tr>
+<tr>
+<td style="text-align:center">CUDA</td>
+<td style="text-align:center">8.0.61</td>
+<td style="text-align:center">gcc4.8.4是肯定支持的，没试过是否支持gcc5.0以上的编译器</td>
+</tr>
+<tr>
+<td style="text-align:center">cuDNN</td>
+<td style="text-align:center">6.0.21</td>
+<td style="text-align:center">深度学习加速库</td>
+</tr>
+<tr>
+<td style="text-align:center">Anaconda</td>
+<td style="text-align:center">5.1</td>
+<td style="text-align:center">我下载解释器版本是 Python3.6.4</td>
+</tr>
+<tr>
+<td style="text-align:center">TensorFlow</td>
+<td style="text-align:center">1.4.0</td>
+<td style="text-align:center">使用Anaconda有多种版本可供选择</td>
+</tr>
+</tbody>
+</table>
+<h2 id="1-安装Nvidia驱动"><a href="#1-安装Nvidia驱动" class="headerlink" title="1. 安装Nvidia驱动"></a>1. 安装Nvidia驱动</h2><h3 id="1-1直接安装"><a href="#1-1直接安装" class="headerlink" title="1.1直接安装"></a>1.1直接安装</h3><p>&emsp;&emsp;Ubuntu14.04下，系统设置-&gt;软件和更新-&gt;附加驱动，可以直接安装或更新驱动程序，下图第一个选项。</p>
+<p><img src="/home/zixianzheng/pic/3.png" alt="1524724876462"></p>
+<p>我安装的是384.111版本的驱动，查了一下<a href="http://www.nvidia.com/Download/index.aspx" target="_blank" rel="noopener">Nvidia驱动下载</a>，我用的显卡是GTX960，最新版本的驱动是390.48。</p>
+<h4 id="1号坑：循环登陆"><a href="#1号坑：循环登陆" class="headerlink" title="1号坑：循环登陆"></a>1号坑：循环登陆</h4><p>&emsp;&emsp;然而，按照上面的方式安装，遇到了开机循环登陆的问题！尝试了找到的所有方法，恩…… 还是建议自己安装驱动。（安装Cuda时候也可以安装，我没有尝试，感觉就有坑）。</p>
+<h3 id="1-2手动安装"><a href="#1-2手动安装" class="headerlink" title="1.2手动安装"></a>1.2手动安装</h3><blockquote>
+<p>参考<a href="https://blog.csdn.net/bxd1314/article/details/47302759" target="_blank" rel="noopener">https://blog.csdn.net/bxd1314/article/details/47302759</a></p>
+</blockquote>
+<p>1.<a href="http://www.nvidia.com/Download/index.aspx" target="_blank" rel="noopener">官网</a>下载，我下载的是NVIDIA-Linux-x86_64-390.48.run文件。<br>2.安装驱动<br><figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ sudo chmod a+x NVIDIA-Linux-x86_64-<span class="number">390.48</span><span class="selector-class">.run</span>		<span class="comment">//更改权限</span></span><br><span class="line">$ sudo gedit /etc/modprobe.d/blacklist<span class="selector-class">.conf</span>			<span class="comment">//编辑文件，屏蔽开源驱动</span></span><br></pre></td></tr></table></figure></p>
+<p>文件中添加一行：<br><figure class="highlight armasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">blacklist </span>nouveau</span><br></pre></td></tr></table></figure></p>
+<p>保存。<br><figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ sudo apt-<span class="built_in">get</span> --purge <span class="built_in">remove</span> xserver-xorg-video-nouveau	<span class="comment">//卸载官方驱动nouveau</span></span><br><span class="line">$ sudo reboot												<span class="comment">//重启</span></span><br></pre></td></tr></table></figure></p>
+<p>进入ttf1，<br><figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ sudo apt-<span class="built_in">get</span> --purge <span class="built_in">remove</span> nvidia-*		<span class="comment">//清除Nvidia相关软件</span></span><br><span class="line">$ sudo /etc/init.d/lightdm <span class="built_in">stop</span>				<span class="comment">//关闭图形环境</span></span><br></pre></td></tr></table></figure></p>
+<p>cd到.run文件目录</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> ./NVIDIA-Linux-x86_64-390.48.run</span></span><br></pre></td></tr></table></figure>
+<p>会出现一系列选择，选择accept,ok,continue，yes。</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ sudo <span class="regexp">/etc/i</span>nit.d<span class="regexp">/lightdm start		/</span><span class="regexp">/启动图形界面</span></span><br></pre></td></tr></table></figure>
+<h3 id="1-3查看驱动"><a href="#1-3查看驱动" class="headerlink" title="1.3查看驱动"></a>1.3查看驱动</h3><p>&emsp;&emsp;下面两个命令都可以看到：</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ cat <span class="regexp">/proc/</span>driver<span class="regexp">/nvidia/</span>version	<span class="regexp">//</span>查看版本</span><br><span class="line">$ nvidia-smi						<span class="regexp">//</span>查看显卡使用情况：驱动版本、id、温度、风扇转速等等。</span><br></pre></td></tr></table></figure>
+<h2 id="2-安装Cuda"><a href="#2-安装Cuda" class="headerlink" title="2.安装Cuda"></a>2.安装Cuda</h2><h3 id="2-1安装、配置"><a href="#2-1安装、配置" class="headerlink" title="2.1安装、配置"></a>2.1安装、配置</h3><p>&emsp;&emsp;<a href="https://developer.nvidia.com/cuda-downloads" target="_blank" rel="noopener">官网</a>下载相应的版本，安装即可</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">sudo</span> <span class="selector-tag">sh</span> <span class="selector-tag">cuda_9</span><span class="selector-class">.0</span><span class="selector-class">.176_384</span><span class="selector-class">.81_linux</span><span class="selector-class">.run</span></span><br></pre></td></tr></table></figure>
+<p>&emsp;&emsp;安装过程中，注意不要安装驱动：</p>
+<blockquote>
+<p>Install NVIDIA Accelerated Graphics Driver for Linux-x86_64 375.26?<br>(y)es/(n)o/(q)uit: no</p>
+</blockquote>
+<p>&emsp;&emsp;添加环境变量：</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ sudo gedit <span class="regexp">/etc/</span>profile						<span class="regexp">//</span>打开文件，添加环境变量</span><br><span class="line">export PATH=<span class="regexp">/usr/</span>local<span class="regexp">/cuda-8.0/</span>bin:<span class="variable">$PATH</span></span><br><span class="line">export LD_LIBRARY_PATH=<span class="regexp">/usr/</span>local<span class="regexp">/cuda-8.0/</span>lib64<span class="variable">$LD_LIBRARY_PATH</span></span><br><span class="line"></span><br><span class="line">$ source ~<span class="regexp">/.bashrc</span></span><br></pre></td></tr></table></figure>
+<h3 id="2-2测试samples"><a href="#2-2测试samples" class="headerlink" title="2.2测试samples"></a>2.2测试samples</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> <span class="built_in">cd</span> /usr/<span class="built_in">local</span>/cuda-7.5/samples/1_Utilities/deviceQuery</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> make</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> sudo ./deviceQuery</span></span><br></pre></td></tr></table></figure>
+<p>结果如下：</p>
+<p><img src="/home/zixianzheng/pic/4.png" alt=""></p>
+<h4 id="2号坑：无法修复依赖关系"><a href="#2号坑：无法修复依赖关系" class="headerlink" title="2号坑：无法修复依赖关系"></a>2号坑：无法修复依赖关系</h4><p>&emsp;&emsp;编译测试文件的时候，有一些依赖不满足，安装这些依赖的时候报错：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">无法修正错误，因为您要求某些软件包保持现状，就是它们破坏了软件包间的依赖关系。</span><br></pre></td></tr></table></figure>
+<p>查了一下，我把软件更新中的推荐更新选上，更新了源，然后update，再安装依赖就能安装了。</p>
+<h2 id="3-安装CuDNN"><a href="#3-安装CuDNN" class="headerlink" title="3.安装CuDNN"></a>3.安装CuDNN</h2><p>&emsp;&emsp;CuDNN全称The NVIDIA CUDA® Deep Neural Network library，深度学习加速库。这个比较简单，官网下载，然后</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> tar -zxvf cudnn-9.0-linux-x64-v7.1.tgz 					//解压</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> sudo cp cuda/include/cudnn.h /usr/<span class="built_in">local</span>/cuda/include/ 	//复制</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> sudo cp cuda/lib64/libcudnn* /usr/<span class="built_in">local</span>/cuda/lib64/ -d 	</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> sudo chmod a+r /usr/<span class="built_in">local</span>/cuda/include/cudnn.h 			//修改权限</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> sudo chmod a+r /usr/<span class="built_in">local</span>/cuda/lib64/libcudnn*</span></span><br></pre></td></tr></table></figure>
+<h2 id="4-安装TesorFlow"><a href="#4-安装TesorFlow" class="headerlink" title="4.安装TesorFlow"></a>4.安装TesorFlow</h2><pre><code>安装TesorFlow的方法有很多中，这里使用Anaconda安装。
+</code></pre><h3 id="4-1关于Anaconda"><a href="#4-1关于Anaconda" class="headerlink" title="4.1关于Anaconda"></a>4.1关于Anaconda</h3><p>&emsp;&emsp;官方介绍：</p>
+<blockquote>
+<p>&emsp;&emsp;Anaconda 是一个集成许多第三方科学计算库的 Python 科学计算环境,Anaconda 使用 conda 作为自己的包管理工具,同时具有自己的计算环境,类似 Virtualenv.<br>&emsp;&emsp;和 Virtualenv 一样,不同 Python 工程需要的依赖包,conda 将他们存储在不同的地方。 TensorFlow 上安装的 Anaconda 不会对之前安装的 Python 包进行覆盖.</p>
+</blockquote>
+<h3 id="4-2-Anaconda安装"><a href="#4-2-Anaconda安装" class="headerlink" title="4.2 Anaconda安装"></a>4.2 Anaconda安装</h3><p>&emsp;&emsp;<a href="https://www.anaconda.com/download/#linux" target="_blank" rel="noopener">下载Anaconda</a>，安装Anaconda</p>
+  <figure class="highlight lsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ bash Anaconda3<span class="number">-4.2</span><span class="number">.0</span>-Linux-x86_64.sh</span><br></pre></td></tr></table></figure>
+<p>&emsp;&emsp;建立一个 conda 计算环境</p>
+  <figure class="highlight gams"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="symbol">$</span> conda create -n tensorflow python=<span class="number">3.6</span>		<span class="comment">//这个计算环境命名为tensorflow</span></span><br></pre></td></tr></table></figure>
+<p>安装 TensorFlow</p>
+<p>&emsp;&emsp;激活环境（source deactivate命令用于deactivate一个环境）：</p>
+  <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> <span class="built_in">source</span> activate tensorflow</span></span><br></pre></td></tr></table></figure>
+<p>激活后可以使用pip安装，也可以用conda安装，我用的是conda。</p>
+<h4 id="4-2-1-conda安装"><a href="#4-2-1-conda安装" class="headerlink" title="4.2.1 conda安装"></a>4.2.1 conda安装</h4><p>查询当前可安装的版本，选择其中一个，我选择的是一个叫cjj3779/tensorflow-gpu的源：</p>
+  <figure class="highlight excel"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ anaconda <span class="built_in">search</span> -<span class="built_in">t</span> conda tensorflow</span><br></pre></td></tr></table></figure>
+<p>查询这个版本，可以看到如何安装这个包，按要求输入即可：</p>
+  <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> anaconda show cjj3779/tensorflow-gpu </span></span><br><span class="line"><span class="meta">$</span><span class="bash"> conda install --channel https://conda.anaconda.org/cjj3779 tensorflow-gpu</span></span><br></pre></td></tr></table></figure>
+<p>  <img src="/home/zixianzheng/pic/7.png" alt=""></p>
+<p>安装成功后,每次使用 TensorFlow 的时候需要激活tesorflow这个环境。<br>然而我并没有安装成功，总是报HTTP错误，改用pip安装，过程如下：</p>
+<h4 id="4-2-2-pip安装"><a href="#4-2-2-pip安装" class="headerlink" title="4.2.2 pip安装"></a>4.2.2 pip安装</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> <span class="built_in">cd</span> ~/anaconda3/envs</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> sudo rm -r /tensorflow		//递归的删除之前未安装成功的文件</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> pip install tfBinaryURL		//安装tensorflow1.4.0-gpu</span></span><br></pre></td></tr></table></figure>
+<p>&emsp;&emsp;tfBinaryURL可使用<a href="https://mirrors.tuna.tsinghua.edu.cn/help/tensorflow/" target="_blank" rel="noopener">清华大学开源软件镜像站</a>的文件，选择计算单元、操作系统、Python版本、TensorFlow版本即可获得相应地址。最终显示成功安装tensorflow、tensorflow-tensorboard。</p>
+<h4 id="3号坑：tf-1-4和python3-6-x兼容性不好"><a href="#3号坑：tf-1-4和python3-6-x兼容性不好" class="headerlink" title="3号坑：tf-1.4和python3.6.x兼容性不好"></a>3号坑：tf-1.4和python3.6.x兼容性不好</h4><p>&emsp;&emsp;进入python环境，导入tensorflow包测试一下，报警告：</p>
+  <figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">RuntimeWarnin<span class="variable">g:</span> compiletime <span class="keyword">version</span> <span class="number">3.5</span> of module <span class="string">'tensorflow.python.framework.fast_tensor_util'</span> does not <span class="keyword">match</span> <span class="keyword">runtime</span> <span class="keyword">version</span> <span class="number">3.6</span></span><br></pre></td></tr></table></figure>
+<p>就是说：我安装的tensorflow要求的解释器是Python3.5的，我现在用的却是Python3.6。但是我选择的是支持3.6的版本的tf。查了一下，这个是tf-1.4本身的问题，tf-1.4在python3.6.x上可能不能正常工作。不想换python3.6了，把tf换成1.3也可以。​</p>
+<p>&emsp;&emsp;解决：在~/anaconda3/envs/下新建一个计算环境，安装tf1.3：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> conda create -n t1.3 python=3.6		//新建计算环境，命名为tf1.3</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> <span class="built_in">source</span> activate tf1.3f				//激活tf1.3</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> pip install tfBinaryURL				//安装tf1.3-gpu版本</span></span><br></pre></td></tr></table></figure>
+<p>导tensorflow包不会报错，可以运行：</p>
+<p><img src="/home/zixianzheng/pic/11.png" alt="1524743463792"></p>
+<h3 id="4-3配置Anaconda"><a href="#4-3配置Anaconda" class="headerlink" title="4.3配置Anaconda"></a>4.3配置Anaconda</h3><p>&emsp;&emsp;在/etc/profile文件中加入</p>
+<figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">export PATH=<span class="variable">$PATH</span><span class="symbol">:/home/zixianzheng/anaconda3/bin</span></span><br></pre></td></tr></table></figure>
+<p>现在，在任意路径下都可以使用Python，并且是Anaconda的Python3.6.4。</p>
+<p><img src="/home/zixianzheng/pic/12.png" alt=""></p>
+<h3 id="4号坑-终端可以运行tf，PyCharm报错"><a href="#4号坑-终端可以运行tf，PyCharm报错" class="headerlink" title="4号坑:终端可以运行tf，PyCharm报错"></a>4号坑:终端可以运行tf，PyCharm报错</h3><p><img src="/home/zixianzheng/pic/10.png" alt=""></p>
+<p>解决方法：</p>
+<blockquote>
+<p><a href="https://blog.csdn.net/appleml/article/details/76922476" target="_blank" rel="noopener">https://blog.csdn.net/appleml/article/details/76922476</a></p>
+</blockquote>
+</div></div></div></div><div class="pure-u-1-4 hidden_mid_and_down"><div id="sidebar"><div class="widget"><form class="search-form" action="//www.baidu.com/baidu" method="get" accept-charset="utf-8" target="_blank"><input type="search" name="word" maxlength="20" placeholder="Search"/><input type="hidden" name="si" value="http://github.com/zixianzheng.github.io.git"/><input name="tn" type="hidden" value="bds"/><input name="cl" type="hidden" value="3"/><input name="ct" type="hidden" value="2097152"/><input name="s" type="hidden" value="on"/></form></div><div class="widget"><div class="widget-title"><i class="fa fa-folder-o"> Kategorien</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Linux相关/">Linux相关</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/图形图像处理/">图形图像处理</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-star-o"> Tags</i></div><div class="tagcloud"><a href="/tags/R-CNN/" style="font-size: 15px;">R-CNN</a> <a href="/tags/object-detection/" style="font-size: 15px;">object detection</a> <a href="/tags/obejct-detection/" style="font-size: 15px;">obejct detection</a> <a href="/tags/Ubuntu14-04/" style="font-size: 15px;">Ubuntu14.04</a> <a href="/tags/Tensorflow/" style="font-size: 15px;">Tensorflow</a> <a href="/tags/GPU/" style="font-size: 15px;">GPU</a> <a href="/tags/Anaconda/" style="font-size: 15px;">Anaconda</a> <a href="/tags/DeepLearning/" style="font-size: 15px;">DeepLearning</a> <a href="/tags/VGG/" style="font-size: 15px;">VGG</a> <a href="/tags/Linux/" style="font-size: 15px;">Linux</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-file-o"> Letzte</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2018/04/27/Fast R-CNN/">Fast R-CNN</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/04/26/Ubuntu14.04下，Anaconda安装Tensorflow1.4.0-GPU/">Ubuntu14.04下，Anaconda安装Tensorflow1.4.0-GPU</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/04/25/常用Linux命令/">常用Linux命令</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/04/24/Bounding-box Regression/">Bounding-box Regression</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/04/20/R-CNN/">R-CNN</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/03/15/VGGNet/">VGGNet</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-external-link"> Blogroll</i></div><ul></ul><a href="https://github.com/zixianZheng" title="github" target="_blank">github</a><ul></ul><a href="https://weibo.com/u/3700586755" title="weibo" target="_blank">weibo</a></div></div></div><div class="pure-u-1 pure-u-md-3-4"><div id="footer">Copyright © 2018 <a href="/." rel="nofollow">噢噢噢噢奥利.</a> Powered by<a rel="nofollow" target="_blank" href="https://hexo.io"> Hexo.</a><a rel="nofollow" target="_blank" href="https://github.com/tufu9441/maupassant-hexo"> Theme</a> by<a rel="nofollow" target="_blank" href="https://github.com/pagecho"> Cho.</a></div></div></div><a class="show" id="rocket" href="#top"></a><script type="text/javascript" src="/js/totop.js?v=0.0.0" async></script><script type="text/javascript" src="//cdn.bootcss.com/fancybox/3.3.5/jquery.fancybox.min.js" async></script><script type="text/javascript" src="/js/fancybox.js?v=0.0.0" async></script><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/fancybox/3.3.5/jquery.fancybox.min.css"><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}
+  });
+</script><script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML" async></script><script type="text/javascript" src="/js/codeblock-resizer.js?v=0.0.0"></script><script type="text/javascript" src="/js/smartresize.js?v=0.0.0"></script></div></body></html>

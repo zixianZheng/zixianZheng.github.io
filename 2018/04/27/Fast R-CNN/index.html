@@ -1,0 +1,71 @@
+<!DOCTYPE html><html><head><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content="专注于机器学习、深度学习、图形图像处理。"><title>Fast R-CNN | 噢噢噢噢奥利</title><link rel="stylesheet" type="text/css" href="/css/style.css?v=0.0.0"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/normalize/8.0.0/normalize.min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/pure/1.0.0/pure-min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/pure/1.0.0/grids-responsive-min.css"><link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css"><script type="text/javascript" src="//cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">Fast R-CNN</h1><a id="logo" href="/.">噢噢噢噢奥利</a><p class="description"></p></div><div id="nav-menu"><a class="current" href="/."><i class="fa fa-home"> Start</i></a><a href="/archives/"><i class="fa fa-archive"> Archiv</i></a><a href="/about/"><i class="fa fa-user"> Über</i></a></div></div><div class="pure-g" id="layout"><div class="pure-u-1 pure-u-md-3-4"><div class="content_container"><div class="post"><h1 class="post-title">Fast R-CNN</h1><div class="post-meta">Apr 27, 2018<span> | </span><span class="category"><a href="/categories/图形图像处理/">图形图像处理</a></span></div><div class="post-content"><p>&emsp;&emsp;Fast R-CNN是对R-CNN、SPPnet的一个改进，主要是提高了训练和测试的速度，也提高了测试的精度。下面讲一讲这篇文章怎么实现速度和精度的提升的。</p>
+<a id="more"></a>
+<h2 id="1-介绍"><a href="#1-介绍" class="headerlink" title="1.介绍"></a>1.介绍</h2><h3 id="1-1-R-CNN网络的缺点"><a href="#1-1-R-CNN网络的缺点" class="headerlink" title="1.1 R-CNN网络的缺点"></a>1.1 R-CNN网络的缺点</h3><ol>
+<li>多阶段的训练。R-CNN的训练有三大步：用log损失微调CNN得到特征提取器；使用候选框的特征图训练SVMs分类器，这里抛弃的softmax分类器；训练bounding-box regressor精修候选框。</li>
+<li>训练消耗大量的时间和空间。在训练SVMs和bounding-box regressor时候，需要保存每个候选框的特征图，这个特征图要几百G的空间。</li>
+<li>目标检测很慢。测试的时候，是先提取候选框，再分别进行特征提取，这个过程有大量的冗余计算。</li>
+</ol>
+<h3 id="1-2-Fast-R-CNN的工作"><a href="#1-2-Fast-R-CNN的工作" class="headerlink" title="1.2 Fast R-CNN的工作"></a>1.2 Fast R-CNN的工作</h3><ol>
+<li>更高的mAP。</li>
+<li>一次性训练参数（single-stage training），用multi-task loss实现一次性训练。</li>
+<li>训练中可以更新所有的网络参数。</li>
+<li>不需要额外保存特征图。</li>
+</ol>
+<h2 id="2-Fast-R-CNN的结构、训练"><a href="#2-Fast-R-CNN的结构、训练" class="headerlink" title="2. Fast R-CNN的结构、训练"></a>2. Fast R-CNN的结构、训练</h2><p>&emsp;&emsp;Fast-RCNN的输入是：完整的图片、候选框集合；输出是K+1类别的概率分布、K个类别的refined参数。过程如下：<br>    1）把原始图片送入CNN进行特征提取，得到特征图。<br>    2）对于每个候选框对应的特征子图，RoI Pooling从中提取出固定长度的特征向量。<br>    3）每个特征向量先经过一系列全连接层，然后送入两个输出层：第一个是softmax概率估计，这个概率分布是K+1个类别上的，添加了一个背景类；第二个是对候选框做精修，每个类别（不包含background类）输出四个值，表示中心点的如何移动，长宽如何缩放。</p>
+<h3 id="2-1-Region-of-Interest-Pooling"><a href="#2-1-Region-of-Interest-Pooling" class="headerlink" title="2.1 Region of Interest Pooling"></a>2.1 Region of Interest Pooling</h3><p>&emsp;&emsp;先解释一下Rol pooling如何把不同大小的特征子图，映射到固定的特征向量。RoI pooling使用的是最大池化。假设池化输出特征图大小为$H\times W$，W和H这两个值和后面全连接层要求的输入向量的长度有关，当然也和特征图的个数有关。文章中提到，每个池化核有四个参数(r,c,h,w)，其中(r,c)表示这个核在特征图中开始的位置，(h,w)表示池化的区域。（实际上，这四个参数就确定了候选框在特征图上的一个位置）。</p>
+<p>&emsp;&emsp;RoI max pooling把$h\times w$大小的特征子图划分为$H\times W$的矩形网格，每个格子$\frac{h}{H} \times \frac{w}{W} $大小，每个格子输出一个值。和标准的最大池化一样，RoI pooling独立的在每个通道中进行。RoI pooling是空间金字塔池化（SSPnets）的特例。</p>
+<h3 id="2-2-Initializing-from-pre-trained-networks"><a href="#2-2-Initializing-from-pre-trained-networks" class="headerlink" title="2.2 Initializing from pre-trained networks"></a>2.2 Initializing from pre-trained networks</h3><p>&emsp;&emsp;需要修改一下拿过来的网络：</p>
+<ol>
+<li>最后一个池化改成RoI pooling，池化的输出大小要和后面全连接要求的输入大小匹配。</li>
+<li>一般网络后面是FC+Softmax，这里要改成两个输出头。</li>
+<li>Fsat R-CNN需要两个输入：原始特征图，RoIs参数（标定了一系列特征子图，位置、大小）。</li>
+</ol>
+<h3 id="2-3-Fine-tuning-for-detection"><a href="#2-3-Fine-tuning-for-detection" class="headerlink" title="2.3 Fine-tuning for detection"></a>2.3 Fine-tuning for detection</h3><h4 id="2-3-1-如何标记候选框、mini-batch中样本的选择"><a href="#2-3-1-如何标记候选框、mini-batch中样本的选择" class="headerlink" title="2.3.1 如何标记候选框、mini-batch中样本的选择"></a>2.3.1 如何标记候选框、mini-batch中样本的选择</h4><p>&emsp;&emsp;Fast R-CNN的训练每个mini-batch采用分层的采样方式。每次使用N张图，每张图提取$\frac{R}{N}$个RoI。一张图的RoIs共享前向、反向传播过程，所以一个mini-batch只有过N个传播过程。而R-CNN一次迭代有R个传播过程。比较一下R-CNN和Fast R-CNN：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">模型</th>
+<th style="text-align:center">每个mini-batch使用原图数量</th>
+<th style="text-align:center">每张图提取RoI数量</th>
+<th style="text-align:center">RoI总量</th>
+<th style="text-align:center">传播过程</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">R-CNN</td>
+<td style="text-align:center">R</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">R</td>
+<td style="text-align:center">R</td>
+</tr>
+<tr>
+<td style="text-align:center">Fast R-CNN</td>
+<td style="text-align:center">N (N&lt;R)</td>
+<td style="text-align:center">$\frac{R}{N}$</td>
+<td style="text-align:center">R</td>
+<td style="text-align:center">N</td>
+</tr>
+</tbody>
+</table>
+<p>&emsp;&emsp;Fast R-CNN在实际训练的时候，取N=2，R=128，也就是没张图片去64个候选框。这64个RoI中，保证至少有25%的IoU&gt;0.5，这些RoI被标记为相应类别（u&gt;=1）（和R-CNN的方法一样）；剩下75%的样本，由那些最大IoU只在[0.1, 0.5)之间的RoI构成，这些被标记为background（u=0）。</p>
+<ul>
+<li>文章中说与所有ground-truth的最大IoU在0.1以下的RoI用来做困难样本挖掘，但是困难的样本不应该是IoU接近0.5的background吗？这些是容易被误分类是某个foreground的。IoU在0.1之下的候选框，应该是很容易正确分类为background的啊？？？</li>
+</ul>
+<p>&emsp;&emsp;训练中只用了一种数据增强：图片以0.5的概率水平翻转。</p>
+<h4 id="2-3-2-Multi-task-loss"><a href="#2-3-2-Multi-task-loss" class="headerlink" title="2.3.2 Multi-task loss"></a>2.3.2 Multi-task loss</h4><p>&emsp;&emsp;和R-CNN模型不同的是：</p>
+<ol>
+<li>一次性训练特征提取器件、分类器、回归器，就是用multi-task loss，这里一般取$\lambda=1$。<br>$$<br>L(p,u,t^u,v) = L_{cls}(p,u) + \lambda [u&gt;=1] L_{loc}(t^u,v)<br>$$<br>解释一下变量的含义：</li>
+</ol>
+<p>&emsp;&emsp;&emsp;&emsp;$p = (p_0,p_1,…,p_K)$，分类器输出，对于每个RoI，在K+1个类别上的概率分布。</p>
+<p>&emsp;&emsp;&emsp;&emsp;u：对于每个RoI，他的ground-truth class，就是label。</p>
+<p>&emsp;&emsp;&emsp;&emsp;$t^u：t^k = (t^k_x,t^k_y,t^k_w,t^k_h)$表示某个RoI在第k类别上的偏移。</p>
+<p>&emsp;&emsp;&emsp;&emsp;v：ground-truth bounding-box regression target，这里的$t^k$和$v$和R-CNN是一样的。</p>
+<ol start="2">
+<li>回归中，使用的损失函数不是平方损失+L2正则，而是$smooth_{L_1}$损失。首先$u&gt;=1$表示回归中不考虑背景类(u=0)的损失（背景类没有ground-truth，也就没有回归的目标v这个量）。对于一个候选框，回归器在K个类别中分别输出四个参数$t^1,t^2,…,t^K$，如果候选框不是背景类，只考虑$t^u$与回归目标$v$的损失。这个损失的具体表达式如下：<br>$$<br>L_{loc}(t^u,v) = \sum_{i\in { {x,y,w,h}} } smooth_{L_1}(t^u_i - v_i)<br>$$<br>$$<br>smooth_{L_1}(x) = \begin{cases}<br>0.5x^2 &amp; if|x|&lt;1        \<br>|x|-0.5 &amp;     otherwise    \<br>\end{cases}<br>$$</li>
+</ol>
+<h4 id="2-3-3-RoI-pooling层的反向传播"><a href="#2-3-3-RoI-pooling层的反向传播" class="headerlink" title="2.3.3 RoI pooling层的反向传播"></a>2.3.3 RoI pooling层的反向传播</h4><h3 id="2-4-尺度不变性"><a href="#2-4-尺度不变性" class="headerlink" title="2.4 尺度不变性"></a>2.4 尺度不变性</h3><h2 id="3-Fast-R-CNN-detection"><a href="#3-Fast-R-CNN-detection" class="headerlink" title="3. Fast R-CNN detection"></a>3. Fast R-CNN detection</h2><p>&emsp;&emsp;检测一张图片的时间主要是：提取候选框+前向传播+额外的一点时间。<br>对于一个RoI r，模型输出后验概率分布p，边框偏移量r（K个类别都有），</p>
+</div><div class="tags"><a href="/tags/object-detection/">object detection</a></div><div class="post-nav"><a class="next" href="/2018/04/26/Ubuntu14.04下，Anaconda安装Tensorflow1.4.0-GPU/">Ubuntu14.04下，Anaconda安装Tensorflow1.4.0-GPU</a></div></div></div></div><div class="pure-u-1-4 hidden_mid_and_down"><div id="sidebar"><div class="widget"><form class="search-form" action="//www.baidu.com/baidu" method="get" accept-charset="utf-8" target="_blank"><input type="search" name="word" maxlength="20" placeholder="Search"/><input type="hidden" name="si" value="http://github.com/zixianzheng.github.io.git"/><input name="tn" type="hidden" value="bds"/><input name="cl" type="hidden" value="3"/><input name="ct" type="hidden" value="2097152"/><input name="s" type="hidden" value="on"/></form></div><div class="widget"><div class="widget-title"><i class="fa fa-folder-o"> Kategorien</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Linux相关/">Linux相关</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/图形图像处理/">图形图像处理</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-star-o"> Tags</i></div><div class="tagcloud"><a href="/tags/R-CNN/" style="font-size: 15px;">R-CNN</a> <a href="/tags/object-detection/" style="font-size: 15px;">object detection</a> <a href="/tags/obejct-detection/" style="font-size: 15px;">obejct detection</a> <a href="/tags/Ubuntu14-04/" style="font-size: 15px;">Ubuntu14.04</a> <a href="/tags/Tensorflow/" style="font-size: 15px;">Tensorflow</a> <a href="/tags/GPU/" style="font-size: 15px;">GPU</a> <a href="/tags/Anaconda/" style="font-size: 15px;">Anaconda</a> <a href="/tags/DeepLearning/" style="font-size: 15px;">DeepLearning</a> <a href="/tags/VGG/" style="font-size: 15px;">VGG</a> <a href="/tags/Linux/" style="font-size: 15px;">Linux</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-file-o"> Letzte</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2018/04/27/Fast R-CNN/">Fast R-CNN</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/04/26/Ubuntu14.04下，Anaconda安装Tensorflow1.4.0-GPU/">Ubuntu14.04下，Anaconda安装Tensorflow1.4.0-GPU</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/04/25/常用Linux命令/">常用Linux命令</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/04/24/Bounding-box Regression/">Bounding-box Regression</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/04/20/R-CNN/">R-CNN</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/03/15/VGGNet/">VGGNet</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-external-link"> Blogroll</i></div><ul></ul><a href="https://github.com/zixianZheng" title="github" target="_blank">github</a><ul></ul><a href="https://weibo.com/u/3700586755" title="weibo" target="_blank">weibo</a></div></div></div><div class="pure-u-1 pure-u-md-3-4"><div id="footer">Copyright © 2018 <a href="/." rel="nofollow">噢噢噢噢奥利.</a> Powered by<a rel="nofollow" target="_blank" href="https://hexo.io"> Hexo.</a><a rel="nofollow" target="_blank" href="https://github.com/tufu9441/maupassant-hexo"> Theme</a> by<a rel="nofollow" target="_blank" href="https://github.com/pagecho"> Cho.</a></div></div></div><a class="show" id="rocket" href="#top"></a><script type="text/javascript" src="/js/totop.js?v=0.0.0" async></script><script type="text/javascript" src="//cdn.bootcss.com/fancybox/3.3.5/jquery.fancybox.min.js" async></script><script type="text/javascript" src="/js/fancybox.js?v=0.0.0" async></script><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/fancybox/3.3.5/jquery.fancybox.min.css"><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}
+  });
+</script><script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML" async></script><script type="text/javascript" src="/js/codeblock-resizer.js?v=0.0.0"></script><script type="text/javascript" src="/js/smartresize.js?v=0.0.0"></script></div></body></html>
