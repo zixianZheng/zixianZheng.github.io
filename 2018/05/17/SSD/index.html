@@ -1,0 +1,53 @@
+<!DOCTYPE html><html><head><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content="专注于机器学习、深度学习、图形图像处理。"><title>SSD | 噢噢噢噢奥利</title><link rel="stylesheet" type="text/css" href="/css/style.css?v=0.0.0"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/normalize/8.0.0/normalize.min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/pure/1.0.0/pure-min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/pure/1.0.0/grids-responsive-min.css"><link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css"><script type="text/javascript" src="//cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">SSD</h1><a id="logo" href="/.">噢噢噢噢奥利</a><p class="description"></p></div><div id="nav-menu"><a class="current" href="/."><i class="fa fa-home"> Start</i></a><a href="/archives/"><i class="fa fa-archive"> Archiv</i></a><a href="/about/"><i class="fa fa-user"> Über</i></a></div></div><div class="pure-g" id="layout"><div class="pure-u-1 pure-u-md-3-4"><div class="content_container"><div class="post"><h1 class="post-title">SSD</h1><div class="post-meta">May 17, 2018<span> | </span><span class="category"><a href="/categories/图形图像处理/">图形图像处理</a></span></div><div class="post-content"><p>&emsp;&emsp;作者提出了Single Shot MultiBox Detector模型做目标检测，模型结合了Faster R-CNN中anchor的概念（default box）和YOLO中one stage的思路，在速度和精度上表现的都非常好。<a id="more"></a></p>
+<h2 id="1-介绍"><a href="#1-介绍" class="headerlink" title="1.介绍"></a>1.介绍</h2><p>&emsp;&emsp;先看看在VOC2007测试集上的表现：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center"></th>
+<th style="text-align:center">Faster R-CNN</th>
+<th style="text-align:center">YOLO</th>
+<th style="text-align:center">SSD</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">速度（FPS）</td>
+<td style="text-align:center">7</td>
+<td style="text-align:center">45</td>
+<td style="text-align:center">59</td>
+</tr>
+<tr>
+<td style="text-align:center">mAP</td>
+<td style="text-align:center">73.2%</td>
+<td style="text-align:center">63.4%</td>
+<td style="text-align:center">74.3%</td>
+</tr>
+</tbody>
+</table>
+<p>&emsp;&emsp;文章主要的几点：</p>
+<ol>
+<li>提出了SSD模型，比Faster R-CNN的mAP要高，比YOLO的速度要快。</li>
+<li>模型输出了一系列default box的category scores和box offsets，这里没有用全连接网络，而是用卷积核实现的。</li>
+<li>为了提高mAP，预测是在多个尺度的feature maps上进行的，并且是多比例的。</li>
+<li>SSD是一个单一的端到端网络，容易训练，检测效果好（即使是低分辨率的图像）。</li>
+<li>作者比较了不同模型，在多个尺度输入的速度和精度。</li>
+</ol>
+<h2 id="2-The-Single-Shot-Detector"><a href="#2-The-Single-Shot-Detector" class="headerlink" title="2.The Single Shot Detector"></a>2.The Single Shot Detector</h2><p>&emsp;&emsp;Sec. 2.1部分讲模型，Sec. 2.2讲训练，Sec. 3讲在各个数据集上的表现。</p>
+<h3 id="2-1-Model"><a href="#2-1-Model" class="headerlink" title="2.1 Model"></a>2.1 Model</h3><p><img src="https://i.loli.net/2018/05/17/5afcf3b3e5a5d.png" alt="ssd1.png"></p>
+<p>&emsp;&emsp;对于每个bounding box，SSD输出两类值：C+1类的类别分布scores；边框的偏移offset。模型的bounding box是预先定义好的、固定尺寸的边框。对边框进行非极大值抑制得到最终检测结果。模型前端使用分类网络，称为base network，作者使用的是VGG-16，只用到最后一个卷积层。然后添加辅助的结构去做检测：</p>
+<p><strong><u>在多尺度的特征图上做检测。</u></strong>作者在截断头部的base network后添加卷积层。这些卷积层逐步的降低特征图的大小，从而实现多尺度的检测。</p>
+<p><strong><u>卷积核做预测。</u></strong>每一个添加的特征层，都使用一组卷积核，来产生固定的预测集合（图2）。这里类似与Faster R-CNN中的对anchor的预测。假设特征图大小是$m \times n$，有$p$个通道，作者使用$3\times 3 \times p$的卷积核来预测scores或者offsets，特征图上的一个点对应k个default box，每个default box需要$C$个类别（包含背景类在内）的scores和4个值的offsets，所以卷积核的个数是$k\times (4+C)$。这个的default box是在特征图上的。作者没有提到对于不同大小和比例的default box是否使用不同的回归参数。</p>
+<p><img src="https://i.loli.net/2018/05/17/5afd0f2f6ef22.png" alt="ssd2.png"></p>
+<p><strong><u>默认边框和宽高比例。</u></strong>文章中的default box和Faster R-CNN中的anchor类似。如图1，每个feature map cell对应$k=4$个default box，训练时需要给每个默认边框标记为某个Ground Truth或者背景。这个$k$个边框包含了不同的大小和比例。作者把default box应用于不同分辨率的特征图中。在多个特征图中使用不同的默认框，可以有效地离散可能的输出框形状空间。</p>
+<h2 id="2-2-Training"><a href="#2-2-Training" class="headerlink" title="2.2 Training"></a>2.2 Training</h2><p><strong><u>标记default boxes。</u></strong>这里和Faster R-CNN中RPN标记的策略一样：所有default boxes中与ground truth的IoU最大的box标记为相应类别；default box与ground truth的IoU&gt;0.5，把该box标记为相应类别，若有多个，取最大的IoU对应的ground truth。上面两种情况，文中成为匹配。没有匹配到GT的box就是背景类别。</p>
+<p><strong><u>损失函数。</u></strong>定义$x^p_{ij} = { 0,1}$，当$i-th$ default box和$j-th$ ground truth匹配并且这个GT为p类别时取1，不匹配或者不为不是p类别则取0。可能存在多个default box与ground truth匹配，所以$\sum_i x^p_{ij} &gt;= 1$。</p>
+<p>$$<br>L(x, c, l, g) = \frac{1}{N}(L_{conf}(x,c) + \alpha L_{loc}(x,l,g))<br>$$</p>
+<p>其中，$N$为default box中正例的数量，$\alpha $交叉验证为1。这里回归误差、分类误差和Faster R-CNN是相同的，只是记号不同。分类误差是多类别的softmax loss。回归误差只计算正类，使用$sommth_{L1}$，回归目标是中心坐标相对宽、高的偏移和宽、高在log-sapce的转化。</p>
+<p><strong><u>default boxes的尺度和比例。</u></strong>在Overfeat、SPP中，建议多尺度输入，然后综合多个结果。在SSD中通过在不同层次的特征图上进行检测，实现了相似的效果，好处是共享了很多卷积运算。</p>
+<p><strong><u>困难样本挖掘。</u></strong>在对default boxes匹配之后，大多数boxes是背景类，特别是在box数量很大时，会造成正负样本不均衡。作者根据背景类的default boxes的confidence loss降序排列，选取最高的一部分负例参与迭代，保证背景：前景 &lt;= 3：1。（很多译文说按照confidence排序，这样的话，参与迭代的样本是“模型认为属于背景类的概率很高的背景类”，并没有找到hard negative样本。hard negative应该是容易false positive的样本，也就是“模型认为属于背景类的概率很低的背景类”。）</p>
+<p><strong><u>数据增强。</u></strong>增加模型的健壮性，提高泛化能力。一张训练图片随机使用下面三种方式：<br>1）原始图片。<br>2）采样一个patch，保证与GT之间最小的IoU为：0.1，0.3，0.5，0.7 或 0.9。<br>3）随机采样一个patch。</p>
+<p>然后把图片resize到固定大小，再以0.5的概率水平翻转。</p>
+</div><div class="tags"><a href="/tags/object-detection/">object detection</a></div><div class="post-nav"><a class="next" href="/2018/05/02/YOLO/">YOLO</a></div></div></div></div><div class="pure-u-1-4 hidden_mid_and_down"><div id="sidebar"><div class="widget"><form class="search-form" action="//www.baidu.com/baidu" method="get" accept-charset="utf-8" target="_blank"><input type="search" name="word" maxlength="20" placeholder="Search"/><input type="hidden" name="si" value="http://github.com/zixianzheng.github.io.git"/><input name="tn" type="hidden" value="bds"/><input name="cl" type="hidden" value="3"/><input name="ct" type="hidden" value="2097152"/><input name="s" type="hidden" value="on"/></form></div><div class="widget"><div class="widget-title"><i class="fa fa-folder-o"> Kategorien</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Linux相关/">Linux相关</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/图形图像处理/">图形图像处理</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-star-o"> Tags</i></div><div class="tagcloud"><a href="/tags/R-CNN/" style="font-size: 15px;">R-CNN</a> <a href="/tags/object-detection/" style="font-size: 15px;">object detection</a> <a href="/tags/obejct-detection/" style="font-size: 15px;">obejct detection</a> <a href="/tags/DeepLearning/" style="font-size: 15px;">DeepLearning</a> <a href="/tags/VGG/" style="font-size: 15px;">VGG</a> <a href="/tags/Ubuntu14-04/" style="font-size: 15px;">Ubuntu14.04</a> <a href="/tags/Tensorflow/" style="font-size: 15px;">Tensorflow</a> <a href="/tags/GPU/" style="font-size: 15px;">GPU</a> <a href="/tags/Anaconda/" style="font-size: 15px;">Anaconda</a> <a href="/tags/Linux/" style="font-size: 15px;">Linux</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-file-o"> Letzte</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2018/05/17/SSD/">SSD</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/02/YOLO/">YOLO</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/04/29/Faster R-CNN/">Faster R-CNN</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/04/27/Fast R-CNN/">Fast R-CNN</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/04/26/Ubuntu14.04下，Anaconda安装Tensorflow1.4.0-GPU/">Ubuntu14.04下，Anaconda安装Tensorflow1.4.0-GPU</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/04/25/常用Linux命令/">常用Linux命令</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/04/20/Bounding-box Regression/">Bounding-box Regression</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/04/20/R-CNN/">R-CNN</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/03/15/VGGNet/">VGGNet</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-external-link"> Blogroll</i></div><ul></ul><a href="https://github.com/zixianZheng" title="github" target="_blank">github</a><ul></ul><a href="https://weibo.com/u/3700586755" title="weibo" target="_blank">weibo</a></div></div></div><div class="pure-u-1 pure-u-md-3-4"><div id="footer">Copyright © 2018 <a href="/." rel="nofollow">噢噢噢噢奥利.</a> Powered by<a rel="nofollow" target="_blank" href="https://hexo.io"> Hexo.</a><a rel="nofollow" target="_blank" href="https://github.com/tufu9441/maupassant-hexo"> Theme</a> by<a rel="nofollow" target="_blank" href="https://github.com/pagecho"> Cho.</a></div></div></div><a class="show" id="rocket" href="#top"></a><script type="text/javascript" src="/js/totop.js?v=0.0.0" async></script><script type="text/javascript" src="//cdn.bootcss.com/fancybox/3.3.5/jquery.fancybox.min.js" async></script><script type="text/javascript" src="/js/fancybox.js?v=0.0.0" async></script><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/fancybox/3.3.5/jquery.fancybox.min.css"><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}
+  });
+</script><script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML" async></script><script type="text/javascript" src="/js/codeblock-resizer.js?v=0.0.0"></script><script type="text/javascript" src="/js/smartresize.js?v=0.0.0"></script></div></body></html>
