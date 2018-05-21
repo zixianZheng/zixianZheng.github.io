@@ -42,7 +42,9 @@
 <h2 id="2-2-Training"><a href="#2-2-Training" class="headerlink" title="2.2 Training"></a>2.2 Training</h2><p><strong><u>标记default boxes。</u></strong>这里和Faster R-CNN中RPN标记的策略一样：所有default boxes中与ground truth的IoU最大的box标记为相应类别；default box与ground truth的IoU&gt;0.5，把该box标记为相应类别，若有多个，取最大的IoU对应的ground truth。上面两种情况，文中成为匹配。没有匹配到GT的box就是背景类别。</p>
 <p><strong><u>损失函数。</u></strong>定义$x^p_{ij} = { 0,1}$，当$i-th$ default box和$j-th$ ground truth匹配并且这个GT为p类别时取1，不匹配或者不为不是p类别则取0。可能存在多个default box与ground truth匹配，所以$\sum_i x^p_{ij} &gt;= 1$。</p>
 <p>$$<br>L(x, c, l, g) = \frac{1}{N}(L_{conf}(x,c) + \alpha L_{loc}(x,l,g))<br>$$</p>
-<p>其中，$N$为default box中正例的数量，$\alpha $交叉验证为1。这里回归误差、分类误差和Faster R-CNN是相同的，只是记号不同。分类误差是多类别的softmax loss。回归误差只计算正类，使用$sommth_{L1}$，回归目标是中心坐标相对宽、高的偏移和宽、高在log-sapce的转化。</p>
+<p>其中，$N$为default box中正例的数量，$\alpha $交叉验证为1。</p>
+<p>&emsp;&emsp;这里回归误差、分类误差和Faster R-CNN是相同的，只是记号不同。回归误差只计算正类，使用$sommth_{L1}$，回归目标是中心坐标相对宽、高的偏移和宽、高在log-sapce的转化。分类误差是多类别的softmax loss。</p>
+<p>$$<br>L_{loc}(x,l,g) = \sum_{i \in Pos}^N \sum_{m \in { cx,cy,w,h}} x^k_{ij}smooth_{L1}(L^m_i - \hat g^m_j)<br>$$</p>
 <p><strong><u>default boxes的尺度和比例。</u></strong>在Overfeat、SPP中，建议多尺度输入，然后综合多个结果。在SSD中通过在不同层次的特征图上进行检测，实现了相似的效果，好处是共享了很多卷积运算。</p>
 <p><strong><u>困难样本挖掘。</u></strong>在对default boxes匹配之后，大多数boxes是背景类，特别是在box数量很大时，会造成正负样本不均衡。作者根据背景类的default boxes的confidence loss降序排列，选取最高的一部分负例参与迭代，保证背景：前景 &lt;= 3：1。（很多译文说按照confidence排序，这样的话，参与迭代的样本是“模型认为属于背景类的概率很高的背景类”，并没有找到hard negative样本。hard negative应该是容易false positive的样本，也就是“模型认为属于背景类的概率很低的背景类”。）</p>
 <p><strong><u>数据增强。</u></strong>增加模型的健壮性，提高泛化能力。一张训练图片随机使用下面三种方式：<br>1）原始图片。<br>2）采样一个patch，保证与GT之间最小的IoU为：0.1，0.3，0.5，0.7 或 0.9。<br>3）随机采样一个patch。</p>

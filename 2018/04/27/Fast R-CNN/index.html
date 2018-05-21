@@ -66,7 +66,7 @@
 <li>回归中，使用的损失函数不是平方损失+L2正则，而是$smooth_{L_1}$损失。首先$u&gt;=1$表示回归中不考虑背景类(u=0)的损失（背景类没有ground-truth，也就没有回归的目标v这个量）。对于一个候选框，回归器在K个类别中分别输出四个参数$t^1,t^2,…,t^K$，如果候选框不是背景类，只考虑$t^u$与回归目标$v$的损失。这个损失的具体表达式如下：<br>$$<br>L_{loc}(t^u,v) = \sum_{i\in { {x,y,w,h}} } smooth_{L_1}(t^u_i - v_i)<br>$$<br>$$<br>smooth_{L_1}(x) = \begin{cases}<br>0.5x^2 &amp; if|x|&lt;1 \\<br>|x|-0.5 &amp; otherwise \\<br>\end{cases}<br>$$</li>
 </ol>
 <h4 id="2-3-3-RoI-pooling层的反向传播"><a href="#2-3-3-RoI-pooling层的反向传播" class="headerlink" title="2.3.3 RoI pooling层的反向传播"></a>2.3.3 RoI pooling层的反向传播</h4><p>&emsp;&emsp;记$x_i  \in R$是RoI层的输入特征图的i-th激活值，$y_{rj}$是r-th的RoI池化的j-th输出，则$y_{rj}$为其有效区域$R(r,j)$的最大值，一个输入$x_i$可能是不同$R(r,j)$的最大值：</p>
-<p>$$<br>y_{rj}=x_{i^*(r,j)} \\<br>i^*(r,j) = argmax_{i’ \in R(r,j)}x_i’<br>$$</p>
+<p>$$<br>y_{rj}=x_{i^<em>(r,j)} \\<br>i^</em>(r,j) = argmax_{i’ \in R(r,j)}x_i’<br>$$</p>
 <p>&emsp;&emsp;反向传播的时候，输入$x_i$的导数为：</p>
 <p>$$<br>\frac{\partial L}{\partial x_i} = \sum_r \sum_j [i = i*(r,j)]\frac{\partial L}{\partial y_{rj}}<br>$$</p>
 <p>就是说，对于RoI的某个输出值$y_{rj}$，BP会把此处的梯度传给有效区域$R(r,j)$内最大的$x_i$（局部导数为1）,其他的$x_i$（不在有效区域内，或者在有效区域内但不是最大值）为0（布局导数为0）。把所有的输出在这一层BP完，在累加就行。</p>
